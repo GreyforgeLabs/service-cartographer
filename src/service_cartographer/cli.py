@@ -160,7 +160,9 @@ def scan(args: argparse.Namespace) -> int:
         host=display_host(socket.gethostname(), show_hostname=args.show_hostname),
         roots=[redact_path(str(root), absolute_paths=args.absolute_paths) for root in roots],
         items=items,
-        warnings=warnings,
+        warnings=[
+            redact_command(warning, absolute_paths=args.absolute_paths) for warning in warnings
+        ],
     )
     rendered = format_report(report, output_format=args.format)
     if args.output:
@@ -247,6 +249,8 @@ def _redact_item(item: InventoryItem, *, absolute_paths: bool) -> InventoryItem:
             metadata[key] = redact_command(value, absolute_paths=absolute_paths)
         elif "path" in key:
             metadata[key] = redact_path(value, absolute_paths=absolute_paths)
+        elif isinstance(value, str):
+            metadata[key] = redact_command(value, absolute_paths=absolute_paths)
         else:
             metadata[key] = value
     return InventoryItem(

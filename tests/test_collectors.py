@@ -5,6 +5,7 @@ from pathlib import Path
 from service_cartographer.collectors import (
     collect_env_files,
     collect_wrappers,
+    find_git_repositories,
     parse_systemctl_unit_files,
     parse_systemctl_units,
 )
@@ -27,6 +28,13 @@ def test_parse_systemctl_units() -> None:
         "alpha.service": "active",
         "beta.timer": "inactive",
     }
+
+
+def test_find_git_repositories_detects_root_repo(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    (repo / ".git").mkdir(parents=True)
+
+    assert find_git_repositories([repo], max_depth=1) == [repo]
 
 
 def test_collect_env_files_does_not_emit_values(tmp_path: Path) -> None:

@@ -258,9 +258,6 @@ def find_git_repositories(repo_roots: Iterable[Path], *, max_depth: int) -> list
             except ValueError:
                 relative = Path()
             depth = 0 if str(relative) == "." else len(relative.parts)
-            dirnames[:] = [
-                name for name in dirnames if name not in SKIP_DIRS and not name.startswith(".cache")
-            ]
             if ".git" in dirnames:
                 resolved = current.resolve()
                 if resolved not in seen:
@@ -268,6 +265,9 @@ def find_git_repositories(repo_roots: Iterable[Path], *, max_depth: int) -> list
                     seen.add(resolved)
                 dirnames[:] = []
                 continue
+            dirnames[:] = [
+                name for name in dirnames if name not in SKIP_DIRS and not name.startswith(".cache")
+            ]
             if depth >= max_depth:
                 dirnames[:] = []
     return repos

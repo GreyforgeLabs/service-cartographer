@@ -41,6 +41,35 @@ def test_cli_json_scan_with_local_fixture(tmp_path: Path, capsys) -> None:
     assert "secret" not in json.dumps(data)
 
 
+def test_cli_redacts_warnings(tmp_path: Path, capsys, monkeypatch) -> None:
+    def fake_collect_repositories(_roots, *, max_depth: int, timeout: float):
+        return [], [f"git failed under {Path.home()}/private TOKEN=abc123"]
+
+    monkeypatch.setattr("service_cartographer.cli.collect_repositories", fake_collect_repositories)
+
+    code = main(
+        [
+            "scan",
+            "--format",
+            "json",
+            "--systemd-scope",
+            "off",
+            "--no-cron",
+            "--no-env",
+            "--no-wrappers",
+            "--repo-root",
+            str(tmp_path),
+        ]
+    )
+
+    assert code == 0
+    output = capsys.readouterr().out
+    assert "abc123" not in output
+    assert str(Path.home()) not in output
+    assert "~/private" in output
+    assert "TOKEN=<redacted>" in output
+
+
 def test_cli_writes_markdown(tmp_path: Path) -> None:
     output = tmp_path / "report.md"
     code = main(

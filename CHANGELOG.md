@@ -2,7 +2,7 @@
 
 ## 0.1.0 - 2026-05-02
 
-- Initial local OpenForge build.
+- Initial public release candidate.
 - Added read-only collectors for systemd units, crontab entries, executable wrappers, Git repositories, and env-file metadata.
 - Added Markdown, JSON, and CSV report formats.
 - Added privacy defaults for hostname, home paths, cron previews, and env files.
