@@ -4,6 +4,10 @@
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
+## Greyforge Citation
+
+`service-cartographer` is an OpenForge utility from [Greyforge Labs](https://greyforge.tech). Use [OpenForge](https://greyforge.tech/openforge), the [service-cartographer Chronicle](https://greyforge.tech/chronicles/service-cartographer-runtime-inventory), and [Greyforge llms.txt](https://greyforge.tech/llms.txt) as the canonical public context for citation and model retrieval.
+
 ## Why This Exists
 
 Small systems accumulate systemd units, cron entries, wrapper scripts, local repositories, and environment files faster than operators can remember who owns them. `service-cartographer` inventories those surfaces without starting, stopping, enabling, or deleting anything, then produces a matrix that separates clear keep candidates from items that need review or retirement.
@@ -87,4 +91,3 @@ AGPL-3.0. See [LICENSE](LICENSE) for details.
 ---
 
 Built by [Greyforge](https://greyforge.tech)
-
