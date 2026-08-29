@@ -15,6 +15,7 @@ SECRET_FLAG_RE = re.compile(
     r"(?:\s+|=))([^\s;&|]+)"
 )
 BEARER_RE = re.compile(r"(?i)\b(Bearer\s+)([A-Za-z0-9._~+\-/]+=*)")
+SPREADSHEET_DANGEROUS_RE = re.compile(r"^[\s\r\n\t]*[=+\-@]")
 
 
 def redact_path(value: str, *, absolute_paths: bool = False) -> str:
@@ -47,3 +48,11 @@ def display_host(hostname: str, *, show_hostname: bool = False) -> str:
 
     return hostname if show_hostname else "redacted"
 
+
+def sanitize_csv_cell(value: object) -> str:
+    """Neutralize spreadsheet formula prefixes while preserving the original text."""
+
+    text = "" if value is None else str(value)
+    if SPREADSHEET_DANGEROUS_RE.match(text):
+        return "'" + text
+    return text

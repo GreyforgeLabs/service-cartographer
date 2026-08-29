@@ -140,6 +140,7 @@ def scan(args: argparse.Namespace) -> int:
                 _env_roots(args),
                 max_depth=args.env_depth,
                 include_names=args.include_env_names,
+                warnings=warnings,
             )
         )
 

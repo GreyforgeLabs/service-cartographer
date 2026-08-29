@@ -91,4 +91,3 @@ def test_cli_writes_markdown(tmp_path: Path) -> None:
 
     assert code == 0
     assert "Keep / Retire Matrix" in output.read_text(encoding="utf-8")
-

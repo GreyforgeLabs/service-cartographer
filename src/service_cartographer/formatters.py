@@ -7,6 +7,7 @@ import io
 import json
 
 from service_cartographer.models import InventoryReport
+from service_cartographer.privacy import sanitize_csv_cell
 
 
 def format_report(report: InventoryReport, *, output_format: str) -> str:
@@ -92,11 +93,10 @@ def csv_report(report: InventoryReport) -> str:
     writer = csv.DictWriter(output, fieldnames=fields)
     writer.writeheader()
     for item in report.items:
-        row = {field: getattr(item, field) for field in fields}
+        row = {field: sanitize_csv_cell(getattr(item, field)) for field in fields}
         writer.writerow(row)
     return output.getvalue()
 
 
 def _escape(value: object) -> str:
     return str(value).replace("|", "\\|")
-

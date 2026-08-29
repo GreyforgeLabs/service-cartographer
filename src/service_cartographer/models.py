@@ -77,4 +77,3 @@ class InventoryReport:
             "warnings": list(self.warnings),
             "items": [item.to_dict() for item in self.items],
         }
-

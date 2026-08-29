@@ -41,6 +41,20 @@ service-cartographer scan \
 service-cartographer scan --systemd-scope off --no-cron --repo-root .
 ```
 
+CSV output is spreadsheet-safe by default: string cells beginning with `=`, `+`,
+`-`, or `@`, including after leading whitespace, are prefixed so spreadsheet
+imports treat them as text. Use JSON when exact machine values are required.
+
+External inventory commands are selected only from the reviewed absolute-path
+allowlist. Each collected item records the executable path and bounded version
+diagnostic. Subprocesses receive a minimal environment; a caller-controlled
+`PATH` cannot replace `git`, `systemctl`, or `crontab`.
+
+Environment-file reads are capped at 64 KiB and 1,000 lines. Symlinked env files
+are skipped, and disappearance or permission races are recorded as warnings so
+unrelated inventory can still complete. Git worktree files and bare repositories
+are recognized without following `.git` marker symlinks.
+
 ## Example Matrix
 
 | Action | Kind | Name | Status | Path | Reason |
