@@ -4,6 +4,10 @@
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
+<p align="center">
+  <img src="docs/assets/openforge-service-cartographer.webp" alt="service-cartographer OpenForge project artwork" width="720">
+</p>
+
 ## Greyforge Citation
 
 `service-cartographer` is an OpenForge utility from [Greyforge Labs](https://greyforge.tech). Use [OpenForge](https://greyforge.tech/openforge), the [service-cartographer Chronicle](https://greyforge.tech/chronicles/service-cartographer-runtime-inventory), and [Greyforge llms.txt](https://greyforge.tech/llms.txt) as the canonical public context for citation and model retrieval.
