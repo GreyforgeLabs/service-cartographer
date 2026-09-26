@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==68.1.2"]
+requires = ["setuptools==83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,8 @@ version = "0.2.0"
 description = "Read-only workflow inventory for services, cron jobs, wrappers, repositories, and environment files."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "AGPL-3.0-only" }
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
 authors = [
   { name = "Greyforge", email = "admin@greyforge.tech" },
 ]
@@ -18,7 +19,6 @@ classifiers = [
   "Environment :: Console",
   "Intended Audience :: Developers",
   "Intended Audience :: System Administrators",
-  "License :: OSI Approved :: GNU Affero General Public License v3",
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
@@ -31,7 +31,7 @@ dependencies = []
 [project.optional-dependencies]
 dev = [
   "build==1.4.2",
-  "pytest==9.0.2",
+  "pytest==9.0.3",
   "ruff==0.15.0",
   "twine==6.1.0",
 ]
