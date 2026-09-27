@@ -28,6 +28,7 @@ def markdown_report(report: InventoryReport) -> str:
         f"- Generated: `{report.generated_at}`",
         f"- Host: `{report.host}`",
         f"- Items: `{len(report.items)}`",
+        f"- Complete: `{'yes' if report.complete else 'no'}`",
         "",
         "## Summary",
         "",

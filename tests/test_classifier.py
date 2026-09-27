@@ -18,7 +18,7 @@ def test_active_unit_is_keep_candidate() -> None:
     assert item.suggested_action == "keep_candidate"
 
 
-def test_stale_disabled_item_is_retire_candidate() -> None:
+def test_old_source_timestamp_never_implies_retirement() -> None:
     item = InventoryItem(
         kind="wrapper",
         name="old-tool",
@@ -28,6 +28,31 @@ def test_stale_disabled_item_is_retire_candidate() -> None:
         [item],
         stale_days=90,
         retire_keywords=[],
+        keep_keywords=[],
+        now=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    assert item.suggested_action == "review"
+    assert "verify actual use" in item.reason
+
+
+def test_active_legacy_unit_is_kept_even_with_retire_keyword() -> None:
+    item = InventoryItem(kind="systemd_unit", name="legacy.service", active="active")
+    classify_items(
+        [item],
+        stale_days=90,
+        retire_keywords=["legacy"],
+        keep_keywords=[],
+        now=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    assert item.suggested_action == "keep_candidate"
+
+
+def test_operator_retire_keyword_marks_inactive_item() -> None:
+    item = InventoryItem(kind="wrapper", name="retire-this", status="executable")
+    classify_items(
+        [item],
+        stale_days=90,
+        retire_keywords=["retire-this"],
         keep_keywords=[],
         now=datetime(2026, 1, 1, tzinfo=UTC),
     )

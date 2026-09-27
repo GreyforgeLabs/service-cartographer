@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 - 2026-09-27
+
+- Preserve the user bus address and runtime directory for `systemctl --user` while keeping other subprocess environments minimal.
+- Mark reports incomplete and exit 1 when a requested collector emits warnings or fails.
+- Stop inferring retirement from old file-change or commit timestamps; only operator-supplied retire keywords can create retirement candidates, and active or enabled items remain keep candidates.
+- Atomically write private (`0600`) report files, including replacements of existing reports.
+
 ## 0.2.0 - 2026-08-28
 
 - Resolve external inventory tools only from reviewed absolute paths and record versions.

@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
+import os
 import socket
 import sys
+import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -20,9 +23,6 @@ from service_cartographer.collectors import (
 from service_cartographer.formatters import format_report
 from service_cartographer.models import InventoryItem, InventoryReport
 from service_cartographer.privacy import display_host, redact_command, redact_path
-
-DEFAULT_RETIRE_KEYWORDS = ["deprecated", "legacy", "retired", "obsolete"]
-DEFAULT_KEEP_KEYWORDS: list[str] = []
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -148,8 +148,8 @@ def scan(args: argparse.Namespace) -> int:
     classify_items(
         items,
         stale_days=args.stale_days,
-        retire_keywords=[*DEFAULT_RETIRE_KEYWORDS, *args.retire_keyword],
-        keep_keywords=[*DEFAULT_KEEP_KEYWORDS, *args.keep_keyword],
+        retire_keywords=args.retire_keyword,
+        keep_keywords=args.keep_keyword,
         now=now,
     )
     items = [_redact_item(item, absolute_paths=args.absolute_paths) for item in items]
@@ -164,14 +164,29 @@ def scan(args: argparse.Namespace) -> int:
         warnings=[
             redact_command(warning, absolute_paths=args.absolute_paths) for warning in warnings
         ],
+        complete=not warnings,
     )
     rendered = format_report(report, output_format=args.format)
     if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(rendered, encoding="utf-8")
+        _write_private_report(args.output, rendered)
     else:
         sys.stdout.write(rendered)
-    return 0
+    return 0 if report.complete else 1
+
+
+def _write_private_report(path: Path, rendered: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    temporary = Path(name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(rendered)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        with contextlib.suppress(FileNotFoundError):
+            temporary.unlink()
 
 
 def _scan_roots(args: argparse.Namespace) -> list[Path]:

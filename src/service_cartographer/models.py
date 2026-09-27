@@ -58,6 +58,7 @@ class InventoryReport:
     roots: list[str]
     items: list[InventoryItem]
     warnings: list[str] = field(default_factory=list)
+    complete: bool = True
 
     def summary(self) -> dict[str, int]:
         counts: dict[str, int] = {"total": len(self.items)}
@@ -75,5 +76,6 @@ class InventoryReport:
             "roots": list(self.roots),
             "summary": self.summary(),
             "warnings": list(self.warnings),
+            "complete": self.complete,
             "items": [item.to_dict() for item in self.items],
         }

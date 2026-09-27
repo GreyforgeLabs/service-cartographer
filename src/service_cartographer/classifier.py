@@ -27,11 +27,6 @@ def classify_items(
             item.suggested_action = "keep_candidate"
             item.reason = "matched keep keyword"
             continue
-        if any(term in text for term in retire_terms):
-            item.suggested_action = "retire_candidate"
-            item.reason = "matched retire keyword"
-            continue
-
         enabled = item.enabled.lower()
         active = item.active.lower()
         status = item.status.lower()
@@ -40,19 +35,18 @@ def classify_items(
         if active in {"active", "running"} or enabled in {"enabled", "static", "generated"}:
             item.suggested_action = "keep_candidate"
             item.reason = "active or enabled"
-        elif item.kind == "cron_job":
-            item.suggested_action = "review"
-            item.reason = "scheduled command needs owner decision"
         elif item.kind == "repository" and status == "dirty":
             item.suggested_action = "keep_candidate"
             item.reason = "repository has local changes"
+        elif any(term in text for term in retire_terms):
+            item.suggested_action = "retire_candidate"
+            item.reason = "matched operator-supplied retire keyword"
+        elif item.kind == "cron_job":
+            item.suggested_action = "review"
+            item.reason = "scheduled command needs owner decision"
         elif age_days is not None and age_days >= stale_days:
-            if item.kind in {"systemd_unit", "repository", "wrapper", "env_file"}:
-                item.suggested_action = "retire_candidate"
-                item.reason = f"no recent activity for {age_days} days"
-            else:
-                item.suggested_action = "review"
-                item.reason = f"stale for {age_days} days"
+            item.suggested_action = "review"
+            item.reason = f"source timestamp is {age_days} days old; verify actual use"
         else:
             item.suggested_action = "review"
             item.reason = "needs owner decision"

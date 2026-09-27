@@ -14,7 +14,7 @@
 
 ## Why This Exists
 
-Small systems accumulate systemd units, cron entries, wrapper scripts, local repositories, and environment files faster than operators can remember who owns them. `service-cartographer` inventories those surfaces without starting, stopping, enabling, or deleting anything, then produces a matrix that separates clear keep candidates from items that need review or retirement.
+Small systems accumulate systemd units, cron entries, wrapper scripts, local repositories, and environment files faster than operators can remember who owns them. `service-cartographer` inventories those surfaces without starting, stopping, enabling, or deleting anything, then produces a review matrix. It never retires an item itself.
 
 ## Quick Start
 
@@ -51,8 +51,16 @@ imports treat them as text. Use JSON when exact machine values are required.
 
 External inventory commands are selected only from the reviewed absolute-path
 allowlist. Each collected item records the executable path and bounded version
-diagnostic. Subprocesses receive a minimal environment; a caller-controlled
-`PATH` cannot replace `git`, `systemctl`, or `crontab`.
+diagnostic. Subprocesses receive a minimal environment; `systemctl --user`
+also receives the current user bus address and runtime directory so it can
+query the live user manager. A caller-controlled `PATH` cannot replace `git`,
+`systemctl`, or `crontab`.
+
+Every JSON report includes `complete`. A failed or partial requested collector
+sets it to `false`, records a warning, and makes the command exit 1. Check both
+the exit code and warnings before using a report to make decisions. `--output`
+writes the report through a temporary file and publishes it with private `0600`
+permissions, including when replacing an older report.
 
 Environment-file reads are capped at 64 KiB and 1,000 lines. Symlinked env files
 are skipped, and disappearance or permission races are recorded as warnings so
@@ -65,7 +73,12 @@ are recognized without following `.git` marker symlinks.
 |---|---|---|---|---|---|
 | `keep_candidate` | `systemd_unit` | `backup.timer` | `active=active, enabled=enabled` | `~/.config/systemd/user/backup.timer` | active or enabled |
 | `review` | `cron_job` | `user-crontab:4` | `status=present` |  | scheduled command needs owner decision |
-| `retire_candidate` | `wrapper` | `old-sync` | `status=executable` | `~/bin/old-sync` | no recent activity for 173 days |
+| `review` | `wrapper` | `old-sync` | `status=executable` | `~/bin/old-sync` | source timestamp is 173 days old; verify actual use |
+
+File modification time and last commit time are source-change timestamps, not
+proof of last execution or use. They only prompt review. Retirement hints
+require an explicit `--retire-keyword`; active or enabled units and dirty
+repositories take precedence over those hints.
 
 ## What It Scans
 
@@ -86,7 +99,8 @@ are recognized without following `.git` marker symlinks.
 
 | Code | Meaning |
 |------|---------|
-| 0 | Scan completed |
+| 0 | All requested collectors completed without warnings |
+| 1 | Report is incomplete; inspect `warnings` |
 | 2 | Usage error |
 
 ## Requirements

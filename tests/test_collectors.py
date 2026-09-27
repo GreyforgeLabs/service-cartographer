@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -39,6 +41,27 @@ def test_parse_systemctl_units() -> None:
         "alpha.service": "active",
         "beta.timer": "inactive",
     }
+
+
+def test_live_user_systemd_bus_when_available() -> None:
+    systemctl = resolve_approved_executable("systemctl")
+    if systemctl is None:
+        pytest.skip("approved systemctl unavailable")
+    baseline = subprocess.run(
+        [systemctl, "--user", "list-units", "--all", "--no-legend", "--no-pager"],
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
+    )
+    if baseline.returncode != 0 or not parse_systemctl_units(baseline.stdout):
+        pytest.skip("live user systemd bus has no readable units")
+
+    items, warnings = collect_systemd(
+        scope="user", unit_dirs=[], include_discovered=True, timeout=10
+    )
+    assert not warnings
+    assert any(item.active for item in items)
 
 
 def test_find_git_repositories_detects_root_repo(tmp_path: Path) -> None:
@@ -206,6 +229,28 @@ def test_run_command_uses_minimal_environment_and_distinct_statuses(
     assert nonzero.status == "nonzero" and nonzero.code == 7
     assert timed_out.status == "timeout" and timed_out.code == 124
     assert permission.status == "exec-error" and permission.code == 126
+
+
+def test_user_systemctl_receives_only_required_bus_environment(tmp_path: Path, monkeypatch) -> None:
+    systemctl = tmp_path / "systemctl"
+    systemctl.write_text(
+        f"#!{sys.executable}\n"
+        "import json, os\n"
+        "print(json.dumps({name: os.getenv(name) for name in "
+        "('DBUS_SESSION_BUS_ADDRESS', 'XDG_RUNTIME_DIR', 'PRIVATE_SCANNER_VALUE')}))\n",
+        encoding="utf-8",
+    )
+    systemctl.chmod(0o755)
+    monkeypatch.setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/run/user/1000/bus")
+    monkeypatch.setenv("XDG_RUNTIME_DIR", "/run/user/1000")
+    monkeypatch.setenv("PRIVATE_SCANNER_VALUE", "must-not-leak")
+    result = run_command([str(systemctl), "--user", "list-units"], timeout=2)
+    assert result.code == 0
+    assert json.loads(result.stdout) == {
+        "DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/1000/bus",
+        "XDG_RUNTIME_DIR": "/run/user/1000",
+        "PRIVATE_SCANNER_VALUE": None,
+    }
 
 
 def test_external_collectors_record_executable_version(tmp_path: Path, monkeypatch) -> None:

@@ -45,6 +45,7 @@ VERSION_ARGUMENTS = {
     "systemctl": ("--version",),
 }
 SAFE_SUBPROCESS_ENV = {"LANG": "C", "LC_ALL": "C", "PATH": "/usr/bin:/bin"}
+USER_BUS_ENV = ("DBUS_SESSION_BUS_ADDRESS", "XDG_RUNTIME_DIR")
 MAX_ENV_BYTES = 64 * 1024
 MAX_ENV_LINES = 1000
 
@@ -422,6 +423,11 @@ def find_env_files(
 
 def run_command(args: list[str], *, timeout: float) -> CommandResult:
     executable = str(args[0]) if args else ""
+    environment = SAFE_SUBPROCESS_ENV.copy()
+    if Path(executable).name == "systemctl" and "--user" in args[1:]:
+        for name in USER_BUS_ENV:
+            if value := os.environ.get(name):
+                environment[name] = value
     try:
         result = subprocess.run(
             args,
@@ -429,7 +435,7 @@ def run_command(args: list[str], *, timeout: float) -> CommandResult:
             capture_output=True,
             text=True,
             timeout=timeout,
-            env=SAFE_SUBPROCESS_ENV,
+            env=environment,
         )
     except subprocess.TimeoutExpired as exc:
         return CommandResult(
